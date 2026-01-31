@@ -127,3 +127,142 @@ SELECT
 FROM 
 	popular_item
 WHERE ranks = 1;
+
+-- 6. Which item was purchased first by the customer after they became a member?
+WITH joined_member AS (
+	SELECT me.customer_id,
+		   s.product_id,
+           ROW_NUMBER() OVER (
+			  PARTITION BY me.customer_id
+              ORDER BY s.order_date) AS row_num
+	FROM members me
+    INNER JOIN sales s
+    ON me.customer_id = s.customer_id 
+    AND s.order_date >= me.join_date
+)
+
+SELECT customer_id,
+	   m.product_name
+FROM joined_member j
+INNER JOIN menu m
+ON m.product_id = j.product_id
+WHERE row_num = 1
+ORDER BY customer_id;
+
+-- 7. Which item was purchased just before the customer became a member?
+WITH joined_mem AS (
+	SELECT me.customer_id,
+		   s.product_id,
+           ROW_NUMBER() OVER (
+		       PARTITION BY me.customer_id
+               ORDER BY s.order_date DESC) AS row_num
+	FROM members me
+    INNER JOIN sales s
+    ON me.customer_id = s.customer_id
+    AND s.order_date < me.join_date
+)
+
+SELECT customer_id,
+	   m.product_name
+FROM joined_mem j
+INNER JOIN menu m
+ON m.product_id = j.product_id
+WHERE row_num = 1
+ORDER BY customer_id;
+
+-- 8. What is the total items and amount spent for each member before they became a member?
+SELECT s.customer_id,
+	   COUNT(s.product_id) AS total_item,
+       SUM(m.price) AS total_amt
+FROM sales s
+INNER JOIN members me
+ON s.customer_id = me.customer_id
+AND s.order_date < me.join_date
+INNER JOIN menu m
+ON s.product_id = m.product_id
+GROUP BY s.customer_id
+ORDER BY s.customer_id;
+
+-- 9.  If each $1 spent equates to 10 points and sushi has a 2x points multiplier - how many points would each customer have?
+WITH points_cte AS (
+	SELECT product_id,
+    CASE
+		WHEN product_id = 1 THEN price*20
+        ELSE price*10 
+        END
+	AS points
+    FROM menu
+)
+
+SELECT s.customer_id,
+	   SUM(p.points) AS total
+FROM sales s
+INNER JOIN points_cte p
+ON s.product_id = p.product_id
+GROUP BY s.customer_id
+ORDER BY s.customer_id;
+
+-- 10. In the first week after a customer joins the program (including their join date) they earn 2x points on all items, not just sushi
+-- how many points do customer A and B have at the end of January?
+WITH dates_cte AS (
+	SELECT customer_id,
+		   join_date,
+           DATE_ADD(join_date, INTERVAL 6 DAY) AS valid_date,
+           LAST_DAY('2021-01-31') AS last_date
+	FROM members
+)
+
+SELECT s.customer_id,
+	   SUM(
+		CASE
+			WHEN m.product_id = 1 THEN m.price * 2 * 10
+            WHEN s.order_date BETWEEN join_date AND valid_date THEN m.price * 20
+            ELSE m.price * 10 END) AS points
+FROM sales s
+INNER JOIN dates_cte d
+ON s.customer_id = d.customer_id
+AND d.join_date <= s.order_date
+AND s.order_date <= d.last_date
+INNER JOIN menu m
+ON s.product_id = m.product_id
+GROUP BY s.customer_id
+ORDER BY s.customer_id;
+
+-- Join all the thing
+SELECT s.customer_id,
+	   s.order_date,
+       m.product_name,
+       m.price,
+       CASE 
+		WHEN s.order_date >= me.join_date THEN 'Y'
+        ELSE 'N' END AS member_status
+FROM sales s
+INNER JOIN members me
+ON s.customer_id = me.customer_id
+LEFT JOIN menu m
+ON s.product_id = m.product_id;
+
+-- Rank all the thing
+WITH customer_data AS (
+	SELECT s.customer_id,
+		   s.order_date,
+		   m.product_name,
+		   m.price,
+		   CASE 
+			WHEN s.order_date >= me.join_date THEN 'Y'
+			ELSE 'N' END AS member_status
+	FROM sales s
+	INNER JOIN members me
+	ON s.customer_id = me.customer_id
+	LEFT JOIN menu m
+	ON s.product_id = m.product_id
+)
+
+SELECT *,
+	   CASE
+		WHEN member_status = 'N' THEN NULL
+        ELSE RANK() OVER (
+			PARTITION BY member_status, customer_id
+            ORDER BY order_date
+        ) END AS ranking
+FROM customer_data;
