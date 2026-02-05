@@ -1,4 +1,4 @@
--- CREATE SCHEMA dannys_diner;
+CREATE SCHEMA dannys_diner;
 USE dannys_diner;
 
 CREATE TABLE sales (
