@@ -154,6 +154,30 @@ WITH RECURSIVE split_val AS (
         )
     FROM split_val
     WHERE remain IS NOT NULL AND remain != ''
-    ORDER BY pizza_id
-)
-SELECT pizza_id, pizza_toppings FROM pizza_recipes_split;
+)SELECT * FROM pizza_recipes_split;
+
+DROP TABLE IF EXISTS customer_orders_split;
+CREATE TABLE customer_orders_split AS
+SELECT
+    t.row_num,
+    t.order_id,
+    t.customer_id,
+    t.pizza_id,
+    TRIM(j1.exclusions) AS exclusions,
+    TRIM(j2.extras) AS extras,
+    t.order_time
+FROM
+    (SELECT
+         *,
+         ROW_NUMBER() OVER () AS row_num
+    FROM customer_orders) t
+INNER JOIN JSON_TABLE(
+            TRIM(REPLACE(JSON_ARRAY(t.exclusions), ',', '","')), -- Cot co json data
+           '$[*]' COLUMNS (exclusions VARCHAR(50) PATH '$')) -- Path: $ root
+    j1
+INNER JOIN JSON_TABLE(
+            TRIM(REPLACE(JSON_ARRAY(t.extras), ',', '","')),
+           '$[*]' COLUMNS (extras VARCHAR(50) PATH '$'))
+    j2;
+
+SELECT * FROM customer_orders_split;
