@@ -86,4 +86,4 @@ SELECT order_id,
            ELSE concat(pizza_name, ' - Include ', GROUP_CONCAT(DISTINCT extras_topping), ' - Exclude ', GROUP_CONCAT(DISTINCT excluded_topping))
        END AS order_item
 FROM order_summary_cte
-GROUP BY row_num;
+GROUP BY row_num, order_id, customer_id, excluded_topping, extras_topping, pizza_name;
