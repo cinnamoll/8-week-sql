@@ -82,3 +82,28 @@ INNER JOIN runner_orders USING(order_id)
 INNER JOIN ratings USING(order_id)
 WHERE cancellation IS NULL
 GROUP BY customer_id, order_id, runner_id, rating, order_time, pickup_time, pickup_time, order_time, duration, distance, duration;
+
+-- 5,If a Meat Lovers pizza was $12 and Vegetarian $10 fixed prices with no cost for extras
+-- and each runner is paid $0.30 per kilometre traveled - how much money does Pizza Runner have left over after these deliveries?
+
+SELECT ROUND(SUM(total_pizza - shipping_fee), 2)
+FROM
+    (SELECT
+            SUM(
+                CASE
+                    WHEN pizza_id = 1 THEN 12
+                    ELSE 10
+                END
+            ) AS total_pizza,
+            MAX(ship) AS shipping_fee
+        FROM (
+            SELECT *,
+                   0.3 * distance AS ship
+            FROM customer_orders
+            INNER JOIN runner_orders USING (order_id)
+            WHERE cancellation IS NULL
+            ORDER BY order_id
+            )t1
+        GROUP BY order_id
+        ORDER BY order_id
+    )t2;
