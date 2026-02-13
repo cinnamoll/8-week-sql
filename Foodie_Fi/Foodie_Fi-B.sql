@@ -92,3 +92,63 @@ FROM largest_plan_cte
 WHERE latest_plan = 1
 GROUP BY plan_id, plan_name
 ORDER BY plan_id;
+
+-- 8, How many customers have upgraded to an annual plan in 2020?
+SELECT
+    COUNT(DISTINCT customer_id) AS total_to_annual
+FROM subscriptions
+WHERE plan_id = 3
+AND YEAR(start_date) = '2020';
+
+-- 9, How many days on average does it take for a customer to an annual plan from the day they join Foodie-Fi?
+WITH
+    trial_plan_cte AS (
+        SELECT *
+        FROM subscriptions
+        WHERE plan_id = 0
+    ),
+    annual_plan_cte AS (
+        SELECT *
+        FROM subscriptions
+        WHERE plan_id = 3
+    )
+SELECT ROUND(AVG(DATEDIFF(annual_plan_cte.start_date, trial_plan_cte.start_date)), 2) AS avg_to_annual
+FROM trial_plan_cte
+JOIN annual_plan_cte USING(customer_id);
+
+-- 10, Can you further breakdown this average value into 30 day periods (i.e. 0-30 days, 31-60 days etc)
+WITH
+    next_plan_cte AS (
+        SELECT
+            *,
+            LEAD(plan_id, 1) OVER(PARTITION BY customer_id ORDER BY start_date) AS next_plan,
+            LEAD(start_date, 1) OVER(PARTITION BY customer_id ORDER BY start_date) AS next_start_date
+        FROM subscriptions
+    ),
+    window_date AS (
+        SELECT
+            *,
+            ROUND(DATEDIFF(next_start_date, start_date) / 30) AS window_30_days
+        FROM next_plan_cte
+        WHERE next_plan = 3
+    )
+SELECT
+    window_30_days,
+    COUNT(DISTINCT customer_id) AS total_customer
+FROM window_date
+GROUP BY window_30_days
+ORDER BY window_30_days;
+
+-- 11, How many customers downgraded from a pro monthly to a basic monthly plan in 2020?
+WITH
+    next_plan_cte AS (
+        SELECT
+            *,
+            LEAD(plan_id, 1) OVER(PARTITION BY customer_id ORDER BY start_date) AS next_plan
+        FROM subscriptions
+    )
+SELECT
+    COUNT(DISTINCT customer_id)
+FROM next_plan_cte
+WHERE plan_id = 2
+AND next_plan = 1;
