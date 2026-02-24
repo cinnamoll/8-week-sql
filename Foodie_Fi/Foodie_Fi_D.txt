@@ -1,0 +1,20 @@
+1, How would you calculate the rate of growth for Foodie-Fi?
+Number of customer from plan_id = 0 to plan_id != 4
+How long in each plan
+
+2, What key metrics would you recommend Foodie-Fi management to
+track over time to assess performance of their overall business?
+Time watched
+Comments, ...
+
+3, What are some key customer journeys or experiences that
+you would analyse further to improve customer retention?
+Cooking show info
+How customer interact with cooking show
+
+4, If the Foodie-Fi team were to create an exit survey shown to customers
+who wish to cancel their subscription, what questions would you include in the survey?
+What part didnt like
+Why
+
+What business levers could the Foodie-Fi team use to reduce the customer churn rate? How would you validate the effectiveness of your ideas?
