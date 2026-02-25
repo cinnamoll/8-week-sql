@@ -39,3 +39,5 @@ WITH
         GROUP BY customer_id, region_id, node_id
     )
 SELECT ROUND(AVG(total)) FROM total_days;
+
+-- 5, What is the median, 80th and 95th percentile for this same reallocation days metric for each region?
