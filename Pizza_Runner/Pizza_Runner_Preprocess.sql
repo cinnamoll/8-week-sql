@@ -14,7 +14,6 @@ VALUES
   (3, '2021-01-08'),
   (4, '2021-01-15');
 
-
 DROP TABLE IF EXISTS pizza_names;
 CREATE TABLE pizza_names (
    pizza_id  INTEGER,
