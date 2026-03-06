@@ -5,13 +5,13 @@ DROP TABLE IF EXISTS clean_weekly_sales;
 CREATE TABLE IF NOT EXISTS clean_weekly_sales AS (
     SELECT 
         DATE_FORMAT(week_date, '%d/%m/%y') AS week_date,
-        WEEKOFYEAR(week_date) AS week_number,
+        WEEKOFYEAR(STR_TO_DATE(week_date, '%d/%m/%y')) AS week_number,
         MONTH(STR_TO_DATE(week_date, '%d/%m/%y')) AS month_number,
         YEAR(STR_TO_DATE(week_date, '%d/%m/%y')) AS calendar_year,
         region,
         platform,
         CASE 
-            WHEN segment IS NOT NULL THEN segment
+            WHEN segment != 'null' THEN segment
             ELSE 'unknown'
         END AS segment,
         CASE 
