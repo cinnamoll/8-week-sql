@@ -41,3 +41,73 @@ SELECT
 FROM clean_weekly_sales
 GROUP BY platform
 ORDER BY platform;
+
+-- 6, What is the percentage of sales for Retail vs Shopify for each month?
+WITH monthly_trans AS (
+    SELECT
+        calendar_year,
+        month_number,
+        platform,
+        SUM(sales) AS total_sales
+    FROM clean_weekly_sales
+    GROUP BY calendar_year, month_number, platform
+)
+SELECT
+    calendar_year,
+    month_number,
+    ROUND(100 * MAX(CASE 
+        WHEN platform = 'Retail' THEN total_sales 
+        ELSE 0 END
+    ) / SUM(total_sales), 2) AS retail_percent,
+    ROUND(100 * MAX(CASE 
+        WHEN platform = 'Shopify' THEN total_sales 
+        ELSE 0 END
+    ) / SUM(total_sales), 2) AS shopify_percent
+FROM monthly_trans
+GROUP BY calendar_year, month_number
+ORDER BY calendar_year, month_number;
+
+-- 7, What is the percentage of sales by demographic for each year in the dataset?
+WITH monthly_trans AS (
+    SELECT 
+        calendar_year,
+        demographic,
+        SUM(sales) AS total_sales
+    FROM clean_weekly_sales
+    GROUP BY calendar_year, demographic
+)
+SELECT
+    calendar_year,
+    ROUND(100 * MIN(CASE
+        WHEN demographic = 'Couples' THEN total_sales
+        ELSE 0 END
+    ) / SUM(total_sales), 2) AS couple_percent,
+    ROUND(100 * MIN(CASE
+        WHEN demographic = 'Families' THEN total_sales
+        ELSE 0 END
+    ) / SUM(total_sales), 2) AS famililes_percent,
+    ROUND(100 * MIN(CASE
+        WHEN demographic = 'unknown' THEN total_sales
+        ELSE 0 END
+    ) / SUM(total_sales), 2) AS unknown_percent
+FROM monthly_trans
+GROUP BY calendar_year
+ORDER BY calendar_year;
+
+-- 8, Which age_band and demographic values contribute the most to Retail sales?
+SELECT
+    age_band,
+    demographic,
+    SUM(sales) AS retail_sales,
+    ROUND(100 * SUM(sales) / SUM(SUM(sales)) OVER (), 1) AS contribute_percent
+FROM clean_weekly_sales
+WHERE platform = 'Retail'
+GROUP BY age_band, demographic
+ORDER BY contribute_percent DESC;
+
+-- Can we use the avg_transaction column to find the average transaction size for each year for Retail vs Shopify? 
+-- If not - how would you calculate it instead?
+SELECT
+    calendar_year,
+    platform,
+    AVG(SUM(transactions)
