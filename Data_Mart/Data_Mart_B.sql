@@ -110,4 +110,7 @@ ORDER BY contribute_percent DESC;
 SELECT
     calendar_year,
     platform,
-    AVG(SUM(transactions)
+    SUM(sales) / SUM(transactions) AS avg_trans_size
+FROM clean_weekly_sales
+GROUP BY calendar_year, platform
+ORDER BY calendar_year, platform;
