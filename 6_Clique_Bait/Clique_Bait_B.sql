@@ -69,7 +69,7 @@ ORDER BY page_id;
 -- 9, What are the top 3 products by purchases?
 SELECT 
     p.page_name,
-    COUNT(e.event_type = 2) AS total_purchase
+    SUM(CASE WHEN e.event_type = 2 THEN 1 ELSE END) AS total_purchase
 FROM events e
 LEFT JOIN page_hierarchy p 
 ON e.page_id = p.page_id
