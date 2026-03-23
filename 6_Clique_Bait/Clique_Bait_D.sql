@@ -2,7 +2,7 @@ DROP TABLE campaign_analysis;
 CREATE TABLE IF NOT EXISTS campaign_analysis (
     userr_id INT,
     visitt_id VARCHAR(10),
-    visit_start_time INT,
+    visit_start_time TIMESTAMP,
     page_views INT,
     cart_adds INT,
     purchase BOOLEAN,
@@ -45,3 +45,5 @@ FROM (
         ON e.page_id = p.page_id
     GROUP BY u.user_id, e.visit_id, c.campaign_name
 ) AS campaign_metric;
+
+SELECT * FROM campaign_analysis;
