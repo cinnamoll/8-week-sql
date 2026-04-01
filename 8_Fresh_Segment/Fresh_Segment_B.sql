@@ -84,3 +84,19 @@ AND im.interest_id IN (
 )
 GROUP BY 1
 ORDER BY 1;
+
+-- 5, After removing these interests - how many unique interests are there for each month?
+SELECT 
+    month_year,
+    COUNT(interest_id)
+FROM interest_metrics
+WHERE month_year IS NOT NULL
+AND interest_id IN (
+    SELECT
+        interest_id
+    FROM interest_metrics
+    GROUP BY interest_id
+    HAVING COUNT(interest_id) > 5
+)
+GROUP BY 1
+ORDER BY 1;
